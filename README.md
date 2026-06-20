@@ -17,3 +17,5 @@ cp .env.example .env
 Open `http://localhost:8004`.
 
 Extraction is Gemini-only. If `GEMINI_API_KEY` is missing or Gemini returns an invalid response, the graph stops at Step 2 and shows an extraction error. Gemini calls use the public REST API through `httpx`.
+
+For a simple data-flow explanation, see `ARCHITECTURE.md`.
