@@ -1,0 +1,131 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 2001 >>
+stream
+BT
+/F1 10 Tf
+50 760 Td
+13 TL
+(DEMO_FAILURE_TRIGGER) Tj
+T*
+(Submission Type: New Business) Tj
+T*
+(Broker: Northstar Retail Brokers) Tj
+T*
+(Broker Contact: maya.chen@northstar.example) Tj
+T*
+(Named Insured: Apex Facilities Consulting LLC) Tj
+T*
+(Line of Business: General Liability) Tj
+T*
+() Tj
+T*
+(Applicant Summary:) Tj
+T*
+(Apex Facilities Consulting LLC describes itself as a facilities consulting and property) Tj
+T*
+(maintenance advisory firm. The applicant coordinates maintenance vendors and prepares) Tj
+T*
+(building condition reports for small property owners.) Tj
+T*
+() Tj
+T*
+(Important Source Evidence:) Tj
+T*
+(The source email also states that Apex performs roof inspections, roof repair coordination,) Tj
+T*
+(occasional roofing installation supervision, and has crews working at height. These details) Tj
+T*
+(should create concern because roofing activity is outside the intended clean consulting) Tj
+T*
+(exposure.) Tj
+T*
+() Tj
+T*
+(Class Code Provided By Broker:) Tj
+T*
+(8742 - Management consulting services) Tj
+T*
+() Tj
+T*
+(Requested Limits:) Tj
+T*
+(General Liability: $1,000,000 per occurrence / $2,000,000 aggregate) Tj
+T*
+() Tj
+T*
+(Operations:) Tj
+T*
+(- Facilities consulting) Tj
+T*
+(- Property maintenance advisory) Tj
+T*
+(- Roof inspection) Tj
+T*
+(- Occasional roofing installation supervision) Tj
+T*
+(- Vendor coordination for roof repair) Tj
+T*
+() Tj
+T*
+(Locations:) Tj
+T*
+(Office: 90 Walnut Street, Hartford, CT 06103) Tj
+T*
+() Tj
+T*
+(Financials:) Tj
+T*
+(Annual revenue: $980,000) Tj
+T*
+(Payroll: $410,000) Tj
+T*
+() Tj
+T*
+(Prior Losses:) Tj
+T*
+(No formal loss runs attached.) Tj
+T*
+() Tj
+T*
+(Broker Notes:) Tj
+T*
+(Broker requests standard queue handling based on class 8742. This document is intentionally) Tj
+T*
+(crafted to show a control gap: if the agent trusts the normalized class code and does not) Tj
+T*
+(independently check source evidence, it can route this account as ready_for_uw even though) Tj
+T*
+(roofing evidence suggests prohibited_class_review.) Tj
+T*
+() Tj
+T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000317 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R /Info << /Title (04_failure_roofing_misclassified_ready_for_uw) >> >>
+startxref
+2370
+%%EOF

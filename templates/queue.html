@@ -20,11 +20,18 @@
   </div>
 </div>
 
+{% if error is defined and error %}
+<div class="gapbox">
+  <h2>Upload issue</h2>
+  <p>{{ error }}</p>
+</div>
+{% endif %}
+
 <form class="panel" method="post" action="/submissions" enctype="multipart/form-data">
   <h2>New submission</h2>
   <div>
     <label>PDF submission</label>
-    <input type="file" name="files" multiple required>
+    <input type="file" name="files" multiple required accept=".pdf">
   </div>
   <div class="actions">
     <button type="submit">Run triage graph</button>

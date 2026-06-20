@@ -39,6 +39,16 @@ templates = Jinja2Templates(directory=str(ROOT / "templates"))
 store = AppStore()
 
 
+def _queue_page_context(request: Request, error: str | None = None) -> dict[str, Any]:
+    return {
+        "request": request,
+        "submissions": [_display_state(s) for s in store.list()],
+        "counts": _queue_counts(),
+        "llm": gemini_status(),
+        "error": error,
+    }
+
+
 def _display_state(state: dict[str, Any]) -> dict[str, Any]:
     item = dict(state)
     if "documents" in item:
@@ -74,17 +84,13 @@ async def queue_page(request: Request):
     return templates.TemplateResponse(
         request,
         "queue.html",
-        {
-            "request": request,
-            "submissions": [_display_state(s) for s in store.list()],
-            "counts": _queue_counts(),
-            "llm": gemini_status(),
-        },
+        _queue_page_context(request),
     )
 
 
 @app.post("/submissions")
 async def create_submission(
+    request: Request,
     broker_name: str = Form(default=""),
     broker_email: str = Form(default=""),
     subject: str = Form(default=""),
@@ -107,11 +113,21 @@ async def create_submission(
     )
     if not files:
         logger.info("SUBMIT rejected no_files")
-        raise HTTPException(status_code=400, detail="Upload at least one PDF file.")
+        return templates.TemplateResponse(
+            request,
+            "queue.html",
+            _queue_page_context(request, "Upload at least one PDF file."),
+            status_code=400,
+        )
     invalid_files = [f.filename or "document" for f in files if not _is_pdf_upload(f)]
     if invalid_files:
         logger.info("SUBMIT rejected non_pdf_files=%s", invalid_files)
-        raise HTTPException(status_code=400, detail=f"Only PDF files are supported: {', '.join(invalid_files)}")
+        return templates.TemplateResponse(
+            request,
+            "queue.html",
+            _queue_page_context(request, f"Only PDF files are supported: {', '.join(invalid_files)}"),
+            status_code=400,
+        )
     logger.info("SUBMIT reading uploaded documents")
     docs = await read_uploads(files)
     logger.info("SUBMIT parsed documents count=%s", len(docs))
