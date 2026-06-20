@@ -1,6 +1,6 @@
 # Submission Triage v2 Architecture
 
-This is a simple prototype. It takes broker documents, asks Gemini to extract structured data, runs deterministic triage checks, then shows the result in the browser.
+This is a simple prototype. It takes uploaded PDF submissions, asks Gemini to extract structured data, runs deterministic triage checks, then shows the result in the browser.
 
 It does not call Jura, Aria, or the old triage app.
 
@@ -37,8 +37,8 @@ flowchart TD
 
 ## What Happens When You Click Submit
 
-1. The browser sends broker metadata and uploaded files to `POST /submissions`.
-2. FastAPI reads the uploaded PDF, DOCX, or TXT files.
+1. The browser sends uploaded PDF files to `POST /submissions`.
+2. FastAPI checks that the uploaded files are PDFs.
 3. The app creates a new in-memory submission ID.
 4. LangGraph starts the six-step workflow.
 5. Gemini extracts the insurance fields from the document.
@@ -53,7 +53,7 @@ flowchart TD
 | Component | File | Simple meaning |
 | --- | --- | --- |
 | FastAPI routes | `triage/server.py` | Receives browser requests and returns pages/API responses. |
-| File reader | `triage/documents.py` | Converts uploads into text or PDF bytes. |
+| File reader | `triage/documents.py` | Converts accepted uploads into PDF bytes for Gemini. |
 | LangGraph workflow | `triage/graph.py` | Controls the six workflow steps. |
 | Gemini extraction | `triage/llm.py` | Sends document content to Gemini and validates the JSON response. |
 | Mock enrichment | `triage/enrichment.py` | Adds deterministic fake enrichment data. |
@@ -76,7 +76,7 @@ flowchart LR
 
 ### Step 1: Ingest & Classify
 
-The app accepts broker metadata and uploaded documents.
+The app accepts uploaded PDF submissions.
 
 ### Step 2: Extract & Structure
 

@@ -63,6 +63,11 @@ def _queue_counts() -> dict[str, int]:
     return counts
 
 
+def _is_pdf_upload(file: UploadFile) -> bool:
+    filename = (file.filename or "").lower()
+    return filename.endswith(".pdf") or file.content_type == "application/pdf"
+
+
 @app.get("/", response_class=HTMLResponse)
 async def queue_page(request: Request):
     logger.info("QUEUE_PAGE requested submissions=%s", len(store.submissions))
@@ -100,6 +105,13 @@ async def create_submission(
         subject=subject or None,
         notes=notes or None,
     )
+    if not files:
+        logger.info("SUBMIT rejected no_files")
+        raise HTTPException(status_code=400, detail="Upload at least one PDF file.")
+    invalid_files = [f.filename or "document" for f in files if not _is_pdf_upload(f)]
+    if invalid_files:
+        logger.info("SUBMIT rejected non_pdf_files=%s", invalid_files)
+        raise HTTPException(status_code=400, detail=f"Only PDF files are supported: {', '.join(invalid_files)}")
     logger.info("SUBMIT reading uploaded documents")
     docs = await read_uploads(files)
     logger.info("SUBMIT parsed documents count=%s", len(docs))
