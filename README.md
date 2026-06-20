@@ -1,8 +1,8 @@
-# Submission Triage Agent v2
+# Submission Agent
 
-Independent prototype for a small commercial submission intake and triage agent.
+Small commercial submission intake and triage app for underwriting teams.
 
-This app is intentionally separate from the older triage prototype and from other underwriting agents in the workspace. It demonstrates a six-step LangGraph workflow and a silent failure mode where a normalized class code can make a submission look clean even when source evidence suggests it should have been escalated.
+This app demonstrates a six-step workflow: upload a PDF, extract key submission fields with Gemini, add supplemental context, check basic guidelines, route the file, and prepare an underwriter handoff. It also supports a demo scenario where a normalized class code can make a submission look clean even when source evidence suggests it should have been escalated.
 
 ## Run
 
