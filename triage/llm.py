@@ -13,7 +13,8 @@ from triage.models import BrokerMetadata, SubmissionRecord, UploadedDocument
 logger = logging.getLogger("triage.llm")
 
 
-DEFAULT_MODEL = "gemini-3.5-flash"
+DEFAULT_MODEL = "gemini-3.1-flash-lite"
+DEFAULT_TIMEOUT_SECONDS = 45
 
 
 class GeminiExtractionError(RuntimeError):
@@ -24,8 +25,20 @@ def gemini_status() -> dict[str, Any]:
     return {
         "provider": "gemini",
         "model": os.getenv("GEMINI_MODEL", DEFAULT_MODEL),
+        "timeout_seconds": _timeout_seconds(),
         "api_key_set": bool(os.getenv("GEMINI_API_KEY")),
     }
+
+
+def _timeout_seconds() -> float:
+    raw = os.getenv("GEMINI_TIMEOUT_SECONDS")
+    if not raw:
+        return DEFAULT_TIMEOUT_SECONDS
+    try:
+        return float(raw)
+    except ValueError:
+        logger.info("LLM invalid GEMINI_TIMEOUT_SECONDS=%s; using default=%s", raw, DEFAULT_TIMEOUT_SECONDS)
+        return DEFAULT_TIMEOUT_SECONDS
 
 
 def _combined_text(docs: list[UploadedDocument], metadata: BrokerMetadata) -> str:
@@ -40,12 +53,36 @@ def _combined_text(docs: list[UploadedDocument], metadata: BrokerMetadata) -> st
     return "\n\n".join(chunks)
 
 
+def _extract_model_text(data: dict[str, Any]) -> str:
+    parts = data["candidates"][0]["content"]["parts"]
+    visible_text = [part["text"] for part in parts if part.get("text") and not part.get("thought")]
+    if not visible_text:
+        visible_text = [part["text"] for part in parts if part.get("text")]
+    return "\n".join(visible_text).strip()
+
+
+def _extract_json_text(text: str) -> str:
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.removeprefix("```json").removeprefix("```").strip()
+        cleaned = cleaned.removesuffix("```").strip()
+    if cleaned.startswith("{"):
+        return cleaned
+
+    start = cleaned.find("{")
+    if start < 0:
+        return cleaned
+    obj, _ = json.JSONDecoder().raw_decode(cleaned[start:])
+    return json.dumps(obj)
+
+
 def extract_submission(docs: list[UploadedDocument], metadata: BrokerMetadata) -> SubmissionRecord:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         logger.info("LLM extract blocked missing_api_key docs=%s broker=%s", len(docs), metadata.broker_name or "-")
         raise GeminiExtractionError("GEMINI_API_KEY is not set. Add it to .env and restart the server.")
     model = os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
+    timeout_seconds = _timeout_seconds()
     combined_text = _combined_text(docs, metadata)
     logger.info(
         "LLM extract start provider=gemini model=%s docs=%s text_chars=%s broker=%s",
@@ -119,16 +156,17 @@ JSON shape:
         "contents": [{"parts": parts}],
         "generationConfig": {
             "responseMimeType": "application/json",
+            "temperature": 0,
         },
     }
 
     try:
-        logger.info("LLM request sending model=%s parts=%s timeout_seconds=45", model, len(parts))
+        logger.info("LLM request sending model=%s parts=%s timeout_seconds=%s", model, len(parts), timeout_seconds)
         response = httpx.post(
             url,
             headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
             json=payload,
-            timeout=45,
+            timeout=timeout_seconds,
         )
         logger.info("LLM response received status=%s bytes=%s", response.status_code, len(response.content))
         response.raise_for_status()
@@ -143,7 +181,7 @@ JSON shape:
 
     try:
         data = response.json()
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        text = _extract_json_text(_extract_model_text(data))
         logger.info("LLM response text extracted chars=%s", len(text))
         submission = SubmissionRecord.model_validate_json(text)
         logger.info(

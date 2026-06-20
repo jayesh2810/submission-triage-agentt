@@ -152,7 +152,11 @@ def review_gate(state: TriageState) -> dict[str, Any]:
         if fc.confidence < LOW_CONFIDENCE_THRESHOLD
     ]
     if low_conf:
-        reasons.append(f"Low confidence fields: {', '.join(low_conf)}")
+        logger.info(
+            "GRAPH review_gate low_confidence_observed_not_blocking submission_id=%s fields=%s",
+            state.get("submission_id"),
+            low_conf,
+        )
 
     if not reasons:
         logger.info("GRAPH review_gate no_review_needed submission_id=%s", state.get("submission_id"))
