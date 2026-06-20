@@ -50,6 +50,9 @@ Return only JSON matching the provided schema.
 Important:
 - Do not make underwriting decisions.
 - Do not apply geography rules.
+- Return a single JSON object only, without Markdown fences or commentary.
+- Use the exact field names from the schema.
+- Omit unknown nullable scalar fields instead of returning null.
 - Capture source_evidence_flags if source text mentions roofing, demolition,
   asbestos, nightclub, security, or other hazardous/prohibited-looking work.
 - If the source is ambiguous, preserve ambiguity in extraction_notes and lower
@@ -61,6 +64,28 @@ Broker metadata:
 
 Text from documents:
 {_combined_text(docs, metadata)}
+
+JSON shape:
+{{
+  "named_insured": "string",
+  "broker_name": "string",
+  "submission_type": "new_business | renewal | endorsement | unknown",
+  "line_of_business": "general_liability | property | bop | workers_comp | unknown",
+  "business_description": "string",
+  "class_code": "string",
+  "sic_code": "string",
+  "naics_code": "string",
+  "requested_limits": {{"per_occurrence": 0, "aggregate": 0, "property_limit": 0, "tiv": 0}},
+  "locations": [{{"address": "string", "city": "string", "state": "string", "zip_code": "string"}}],
+  "payroll": 0,
+  "revenue": 0,
+  "tiv": 0,
+  "prior_losses": [{{"date": "string", "description": "string", "amount": 0}}],
+  "missing_required_fields": ["string"],
+  "field_confidence": [{{"field": "string", "confidence": 0.0, "evidence": "string"}}],
+  "source_evidence_flags": ["string"],
+  "extraction_notes": "string"
+}}
 """
 
     parts: list[dict[str, Any]] = [{"text": prompt}]
@@ -81,7 +106,6 @@ Text from documents:
         "contents": [{"parts": parts}],
         "generationConfig": {
             "responseMimeType": "application/json",
-            "responseSchema": SubmissionRecord.model_json_schema(),
         },
     }
 
