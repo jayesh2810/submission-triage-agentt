@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from typing import Any
 
@@ -8,6 +9,8 @@ import httpx
 from pydantic import ValidationError
 
 from triage.models import BrokerMetadata, SubmissionRecord, UploadedDocument
+
+logger = logging.getLogger("triage.llm")
 
 
 DEFAULT_MODEL = "gemini-3.5-flash"
@@ -40,8 +43,17 @@ def _combined_text(docs: list[UploadedDocument], metadata: BrokerMetadata) -> st
 def extract_submission(docs: list[UploadedDocument], metadata: BrokerMetadata) -> SubmissionRecord:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
+        logger.info("LLM extract blocked missing_api_key docs=%s broker=%s", len(docs), metadata.broker_name or "-")
         raise GeminiExtractionError("GEMINI_API_KEY is not set. Add it to .env and restart the server.")
     model = os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
+    combined_text = _combined_text(docs, metadata)
+    logger.info(
+        "LLM extract start provider=gemini model=%s docs=%s text_chars=%s broker=%s",
+        model,
+        len(docs),
+        len(combined_text),
+        metadata.broker_name or "-",
+    )
 
     prompt = f"""
 You are extracting a small commercial insurance submission for a triage workflow.
@@ -63,7 +75,7 @@ Broker metadata:
 {metadata.model_dump_json()}
 
 Text from documents:
-{_combined_text(docs, metadata)}
+{combined_text}
 
 JSON shape:
 {{
@@ -91,6 +103,7 @@ JSON shape:
     parts: list[dict[str, Any]] = [{"text": prompt}]
     for doc in docs:
         if doc.mime_type == "application/pdf" and doc.raw_bytes_b64:
+            logger.info("LLM attach pdf filename=%s bytes=%s", doc.filename, doc.size)
             parts.insert(
                 0,
                 {
@@ -110,23 +123,37 @@ JSON shape:
     }
 
     try:
+        logger.info("LLM request sending model=%s parts=%s timeout_seconds=45", model, len(parts))
         response = httpx.post(
             url,
             headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
             json=payload,
             timeout=45,
         )
+        logger.info("LLM response received status=%s bytes=%s", response.status_code, len(response.content))
         response.raise_for_status()
     except httpx.HTTPStatusError as exc:
         status = exc.response.status_code if exc.response is not None else "unknown"
         detail = exc.response.text[:500] if exc.response is not None else str(exc)
+        logger.info("LLM response http_error status=%s detail=%s", status, detail)
         raise GeminiExtractionError(f"Gemini API request failed with HTTP {status}: {detail}") from exc
     except httpx.HTTPError as exc:
+        logger.info("LLM request transport_error error=%s", exc)
         raise GeminiExtractionError(f"Gemini API request failed: {exc}") from exc
 
     try:
         data = response.json()
         text = data["candidates"][0]["content"]["parts"][0]["text"]
-        return SubmissionRecord.model_validate_json(text)
+        logger.info("LLM response text extracted chars=%s", len(text))
+        submission = SubmissionRecord.model_validate_json(text)
+        logger.info(
+            "LLM validation complete named_insured=%s class_code=%s line=%s missing=%s",
+            submission.named_insured or "-",
+            submission.class_code or "-",
+            submission.line_of_business,
+            submission.missing_required_fields,
+        )
+        return submission
     except (KeyError, IndexError, TypeError, json.JSONDecodeError, ValidationError) as exc:
+        logger.info("LLM validation failed error=%s", exc)
         raise GeminiExtractionError(f"Gemini response could not be parsed into a submission record: {exc}") from exc

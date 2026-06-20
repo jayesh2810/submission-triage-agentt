@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import logging
+
 from triage.models import EnrichmentResult, SubmissionRecord
+
+logger = logging.getLogger("triage.enrichment")
 
 
 def enrich_submission(submission: SubmissionRecord) -> EnrichmentResult:
     name = submission.named_insured or "Unknown insured"
     class_code = submission.class_code or "unknown"
     source_flags = set(submission.source_evidence_flags)
+    logger.info("ENRICH start name=%s class_code=%s source_flags=%s", name, class_code, sorted(source_flags))
 
     claims_signal = {
         "summary": "No severe losses found in mock lookup.",
@@ -20,7 +25,7 @@ def enrich_submission(submission: SubmissionRecord) -> EnrichmentResult:
             "loss_count_3yr": 2,
         }
 
-    return EnrichmentResult(
+    result = EnrichmentResult(
         business_profile={
             "matched_name": name,
             "confidence": 0.86,
@@ -37,4 +42,10 @@ def enrich_submission(submission: SubmissionRecord) -> EnrichmentResult:
             "Geo/cat context is displayed for handoff context, not guideline routing.",
         ],
     )
-
+    logger.info(
+        "ENRICH complete matched_name=%s normalized_class=%s claims_severity=%s",
+        result.business_profile["matched_name"],
+        result.business_profile["normalized_class_code"],
+        result.claims_signal["severity"],
+    )
+    return result
