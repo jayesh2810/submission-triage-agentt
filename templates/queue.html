@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Queue - Submission Triage Agent{% endblock %}
+{% block content %}
+<div class="topline">
+  <div>
+    <h1>Submission queue</h1>
+    <div class="hint">Upload broker documents, run the six-step graph, and inspect where the agent can go wrong.</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Workflow</h2>
+  <div class="steps">
+    <div class="step"><div class="num">STEP 1</div><div class="title">Ingest & Classify</div><div class="desc">Broker metadata and uploaded docs.</div></div>
+    <div class="step"><div class="num">STEP 2</div><div class="title">Extract & Structure</div><div class="desc">Gemini-only structured extraction.</div></div>
+    <div class="step"><div class="num">STEP 3</div><div class="title">Enrich</div><div class="desc">Mock D&B, claims, and geo/cat context.</div></div>
+    <div class="step"><div class="num">STEP 4</div><div class="title">Appetite & Eligibility</div><div class="desc">Class, limits, prohibited classes. No geography.</div></div>
+    <div class="step"><div class="num">STEP 5</div><div class="title">Route</div><div class="desc">Queue assignment only.</div></div>
+    <div class="step"><div class="num">STEP 6</div><div class="title">Handoff</div><div class="desc">UW workbench package.</div></div>
+  </div>
+</div>
+
+<div class="grid two">
+  <form class="panel" method="post" action="/submissions" enctype="multipart/form-data">
+    <h2>New submission</h2>
+    <div class="grid two">
+      <div>
+        <label>Broker name</label>
+        <input name="broker_name" placeholder="Northstar Retail Brokers">
+      </div>
+      <div>
+        <label>Broker email</label>
+        <input name="broker_email" placeholder="broker@example.com">
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <label>Subject</label>
+      <input name="subject" placeholder="New business submission">
+    </div>
+    <div style="margin-top:12px">
+      <label>Broker notes or email body</label>
+      <textarea name="notes" placeholder="Paste the broker email here. Upload PDF, DOCX, or TXT below."></textarea>
+    </div>
+    <div style="margin-top:12px">
+      <label>Documents</label>
+      <input type="file" name="files" multiple accept=".pdf,.docx,.txt,.md,application/pdf,text/plain">
+    </div>
+    <div class="actions">
+      <button type="submit">Run triage graph</button>
+    </div>
+  </form>
+
+  <div class="panel">
+    <h2>Demo failure case</h2>
+    <p class="hint">Creates a submission whose source text mentions roofing. Gemini may normalize it to class 8742 management consulting; if it does, Step 4 trusts that class and the agent routes it cleanly.</p>
+    <form method="post" action="/demo/failure" class="actions">
+      <button type="submit">Run failure demo</button>
+    </form>
+    <div class="notice" style="margin-top:14px">This uses the same Gemini extraction path as uploaded files. If Gemini or the API key fails, the run stops at extraction.</div>
+  </div>
+</div>
+
+<div class="grid three">
+  <div class="panel"><h3>Ready for UW</h3><div class="badge ready_for_uw">{{ counts.ready_for_uw }}</div></div>
+  <div class="panel"><h3>Missing info</h3><div class="badge missing_info">{{ counts.missing_info }}</div></div>
+  <div class="panel"><h3>Senior review</h3><div class="badge senior_uw_review">{{ counts.senior_uw_review }}</div></div>
+</div>
+
+<div class="panel">
+  <h2>Submissions</h2>
+  {% if submissions %}
+  <table>
+    <thead>
+      <tr><th>Submission</th><th>Insured</th><th>Status</th><th>Queue</th><th>Class</th><th>Control gap</th></tr>
+    </thead>
+    <tbody>
+      {% for s in submissions %}
+      {% set interrupt = s.get("interrupt") or {} %}
+      {% set sub = s.get("submission") or interrupt.get("submission") or {} %}
+      {% set fa = s.get("failure_analysis") or {} %}
+      <tr>
+        <td><a href="/handoff/{{ s.submission_id }}">{{ s.submission_id }}</a><br><span class="muted">{{ s.created_at or "" }}</span></td>
+        <td>{{ sub.named_insured or "Unknown" }}</td>
+        <td><span class="badge {{ s.status }}">{{ s.status }}</span></td>
+        <td><span class="badge {{ s.queue or 'missing_info' }}">{{ s.queue or "pending" }}</span></td>
+        <td>{{ sub.class_code or "-" }}</td>
+        <td>{% if fa.has_control_gap %}<span class="badge gap">yes</span>{% else %}<span class="muted">none</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="hint">No submissions yet. Run the failure demo or upload a file.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+metadata:
+  version: "prototype-1"
+  description: "Submission triage guideline checks. Geography intentionally excluded."
+
+required_fields:
+  - named_insured
+  - class_code
+  - line_of_business
+
+class_codes:
+  "8742":
+    label: "Management consulting services"
+    status: acceptable
+    notes: "Routine office/service exposure; route to standard underwriter."
+  "5812":
+    label: "Restaurants"
+    status: acceptable
+    notes: "Standard small commercial review."
+  "5411":
+    label: "Grocery stores"
+    status: acceptable
+    notes: "Standard small commercial review."
+  "1731":
+    label: "Electrical contractors"
+    status: senior_review
+    notes: "Contractor exposure needs senior review."
+  "1761":
+    label: "Roofing contractors"
+    status: prohibited
+    notes: "Roofing is outside this intake program."
+  "1799":
+    label: "Special trade contractors NEC"
+    status: senior_review
+    notes: "Ambiguous contractor class."
+  "7999":
+    label: "Amusement and recreation NEC"
+    status: senior_review
+    notes: "Needs underwriting triage before queue assignment."
+
+limits:
+  general_liability:
+    standard_max_per_occurrence: 1000000
+    senior_review_above: 1000000
+  bop:
+    standard_tiv_max: 2000000
+    senior_review_above: 2000000
+  property:
+    standard_tiv_max: 2000000
+    senior_review_above: 2000000
+
+source_evidence_red_flags:
+  roofing:
+    expected_route: prohibited_class_review
+    reason: "Source text mentions roofing work, but Step 4 trusts the normalized class code."
+  demolition:
+    expected_route: prohibited_class_review
+    reason: "Source text mentions demolition work, which should not route cleanly."
+  asbestos:
+    expected_route: prohibited_class_review
+    reason: "Source text mentions asbestos exposure."
+  nightclub:
+    expected_route: senior_uw_review
+    reason: "Source text mentions nightclub/security exposure."
+

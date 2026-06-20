@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Submission Triage Agent{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Submission Triage Agent</div>
+    <div class="subbrand">Independent LangGraph prototype. Intake, extraction, enrichment, guideline checks, routing, handoff.</div>
+    <nav class="nav">
+      <a href="/">Queue <span class="pill">{{ counts.ready_for_uw + counts.missing_info + counts.senior_uw_review + counts.prohibited_class_review }}</span></a>
+      <a href="/">{{ counts.needs_review }} Needs review</a>
+      <a href="/health">Health</a>
+    </nav>
+    <div style="margin-top:24px" class="subbrand">
+      Gemini: {{ llm.model }}<br>
+      API key: {% if llm.api_key_set %}set{% else %}missing; extraction will fail{% endif %}
+    </div>
+  </aside>
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Review - Submission Triage Agent{% endblock %}
+{% block content %}
+{% set payload = state.interrupt or {} %}
+{% set sub = payload.submission or state.submission or {} %}
+<div class="topline">
+  <div>
+    <h1>Manual review</h1>
+    <div class="hint">{{ state.submission_id }}</div>
+  </div>
+  <a class="button secondary" href="/">Back to queue</a>
+</div>
+
+<div class="notice">
+  <strong>Graph paused for review.</strong>
+  {% for reason in payload.reasons or [] %}
+    <div>{{ reason }}</div>
+  {% endfor %}
+</div>
+
+<form class="panel" method="post" action="/review/{{ state.submission_id }}/resume">
+  <h2>Edit extracted fields</h2>
+  <div class="grid two">
+    <div>
+      <label>Named insured</label>
+      <input name="named_insured" value="{{ sub.named_insured or '' }}">
+    </div>
+    <div>
+      <label>Class code</label>
+      <input name="class_code" value="{{ sub.class_code or '' }}">
+    </div>
+    <div>
+      <label>Line of business</label>
+      <select name="line_of_business">
+        {% for lob in ["general_liability","property","bop","workers_comp","unknown"] %}
+        <option value="{{ lob }}" {% if sub.line_of_business == lob %}selected{% endif %}>{{ lob }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>Business description</label>
+      <input name="business_description" value="{{ sub.business_description or '' }}">
+    </div>
+  </div>
+  <input type="hidden" name="action" value="resume">
+  <div class="actions">
+    <button type="submit">Resume graph</button>
+  </div>
+</form>
+
+<div class="panel">
+  <h2>Raw paused state</h2>
+  <pre>{{ state }}</pre>
+</div>
+{% endblock %}
+

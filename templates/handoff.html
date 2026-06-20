@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Handoff - Submission Triage Agent{% endblock %}
+{% block content %}
+{% set handoff = state.get("handoff") or {} %}
+{% set interrupt = state.get("interrupt") or {} %}
+{% set sub = handoff.get("submission") or state.get("submission") or interrupt.get("submission") or {} %}
+{% set routing = handoff.get("routing") or state.get("routing") or {} %}
+{% set guidelines = handoff.get("guidelines") or state.get("guidelines") or {} %}
+{% set enrich = handoff.get("enrichment") or state.get("enrichment") or {} %}
+{% set fa = handoff.get("failure_analysis") or state.get("failure_analysis") or {} %}
+{% set extraction_failed = state.get("status") == "error" %}
+
+<div class="topline">
+  <div>
+    <h1>Handoff package</h1>
+    <div class="hint">{{ state.submission_id }}{% if state.status == "needs_review" %} needs manual review before handoff is complete{% endif %}</div>
+  </div>
+  <div class="actions">
+    <a class="button secondary" href="/">Back to queue</a>
+    <a class="button secondary" href="/handoff/{{ state.submission_id }}.json">Export JSON</a>
+    {% if state.status == "needs_review" %}
+    <a class="button" href="/review/{{ state.submission_id }}">Open review</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if extraction_failed %}
+<div class="gapbox">
+  <h2>Extraction failed</h2>
+  <p>{{ state.error }}</p>
+  <p>The graph stopped at Step 2. No local extractor ran, and no enrichment, guideline check, routing, or handoff package was created.</p>
+</div>
+{% endif %}
+
+{% if fa.has_control_gap %}
+<div class="gapbox">
+  <h2>Failure analysis</h2>
+  <p><strong>What the agent believed:</strong> {{ fa.agent_believed }}</p>
+  <p><strong>What the source evidence suggested:</strong> {{ fa.source_evidence_suggested }}</p>
+  <p><strong>Where the control gap happened:</strong> {{ fa.control_gap }}</p>
+  <p><strong>Expected route if evidence were checked independently:</strong> {{ fa.expected_route }}</p>
+</div>
+{% endif %}
+
+<div class="panel">
+  <h2>Workflow status</h2>
+  <div class="steps">
+    <div class="step"><div class="num">STEP 1</div><div class="title">Ingest & Classify</div><div class="desc">Complete</div></div>
+    <div class="step"><div class="num">STEP 2</div><div class="title">Extract & Structure</div><div class="desc">{% if extraction_failed %}Failed{% else %}Class {{ sub.class_code or "unknown" }}{% endif %}</div></div>
+    <div class="step"><div class="num">STEP 3</div><div class="title">Enrich</div><div class="desc">{% if extraction_failed %}Skipped{% else %}Mock enrichment attached{% endif %}</div></div>
+    <div class="step"><div class="num">STEP 4</div><div class="title">Appetite & Eligibility</div><div class="desc">{% if extraction_failed %}Skipped{% else %}No geography checks{% endif %}</div></div>
+    <div class="step"><div class="num">STEP 5</div><div class="title">Route</div><div class="desc">{% if extraction_failed %}Skipped{% else %}{{ routing.queue or "pending" }}{% endif %}</div></div>
+    <div class="step"><div class="num">STEP 6</div><div class="title">Handoff</div><div class="desc">{{ state.status }}</div></div>
+  </div>
+</div>
+
+<div class="grid two">
+  <div class="panel">
+    <h2>Agent believed</h2>
+    <dl class="kv">
+      <dt>Named insured</dt><dd>{{ sub.named_insured or "-" }}</dd>
+      <dt>Line</dt><dd>{{ sub.line_of_business or "-" }}</dd>
+      <dt>Class code</dt><dd>{{ sub.class_code or "-" }}</dd>
+      <dt>Description</dt><dd>{{ sub.business_description or "-" }}</dd>
+      <dt>Source evidence flags</dt><dd>{{ sub.source_evidence_flags or [] }}</dd>
+      <dt>Extraction notes</dt><dd>{{ sub.extraction_notes or "-" }}</dd>
+    </dl>
+  </div>
+  <div class="panel">
+    <h2>Route</h2>
+    {% if routing.queue %}
+    <p><span class="badge {{ routing.queue }}">{{ routing.queue }}</span></p>
+    <p>{{ routing.rationale }}</p>
+    {% elif extraction_failed %}
+    <p><span class="badge error">error</span></p>
+    <p>Stopped before routing because Gemini extraction did not produce a valid structured record.</p>
+    {% else %}
+    <p><span class="badge needs_review">needs_review</span></p>
+    <p>Graph is waiting for manual review.</p>
+    {% endif %}
+    <h3>Guideline reasons</h3>
+    <ul>
+      {% for reason in guidelines.reasons or [] %}<li>{{ reason }}</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="grid two">
+  <div class="panel">
+    <h2>Mock enrichment</h2>
+    <pre>{{ enrich }}</pre>
+  </div>
+  <div class="panel">
+    <h2>Audit trail</h2>
+    <pre>{% for event in state.audit_events or [] %}{{ event }}
+{% endfor %}</pre>
+  </div>
+</div>
+{% endblock %}

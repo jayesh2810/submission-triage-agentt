@@ -1,0 +1,108 @@
+from __future__ import annotations
+
+import json
+import os
+from typing import Any
+
+import httpx
+from pydantic import ValidationError
+
+from triage.models import BrokerMetadata, SubmissionRecord, UploadedDocument
+
+
+DEFAULT_MODEL = "gemini-3.5-flash"
+
+
+class GeminiExtractionError(RuntimeError):
+    """Raised when Gemini extraction cannot produce a valid submission record."""
+
+
+def gemini_status() -> dict[str, Any]:
+    return {
+        "provider": "gemini",
+        "model": os.getenv("GEMINI_MODEL", DEFAULT_MODEL),
+        "api_key_set": bool(os.getenv("GEMINI_API_KEY")),
+    }
+
+
+def _combined_text(docs: list[UploadedDocument], metadata: BrokerMetadata) -> str:
+    chunks = []
+    if metadata.subject:
+        chunks.append(f"Subject: {metadata.subject}")
+    if metadata.notes:
+        chunks.append(f"Broker notes:\n{metadata.notes}")
+    for doc in docs:
+        if doc.text:
+            chunks.append(f"Document: {doc.filename}\n{doc.text}")
+    return "\n\n".join(chunks)
+
+
+def extract_submission(docs: list[UploadedDocument], metadata: BrokerMetadata) -> SubmissionRecord:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise GeminiExtractionError("GEMINI_API_KEY is not set. Add it to .env and restart the server.")
+    model = os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
+
+    prompt = f"""
+You are extracting a small commercial insurance submission for a triage workflow.
+Return only JSON matching the provided schema.
+
+Important:
+- Do not make underwriting decisions.
+- Do not apply geography rules.
+- Capture source_evidence_flags if source text mentions roofing, demolition,
+  asbestos, nightclub, security, or other hazardous/prohibited-looking work.
+- If the source is ambiguous, preserve ambiguity in extraction_notes and lower
+  the relevant field confidence.
+- Extract class_code/SIC/NAICS only when present or strongly implied.
+
+Broker metadata:
+{metadata.model_dump_json()}
+
+Text from documents:
+{_combined_text(docs, metadata)}
+"""
+
+    parts: list[dict[str, Any]] = [{"text": prompt}]
+    for doc in docs:
+        if doc.mime_type == "application/pdf" and doc.raw_bytes_b64:
+            parts.insert(
+                0,
+                {
+                    "inline_data": {
+                        "mime_type": "application/pdf",
+                        "data": doc.raw_bytes_b64,
+                    }
+                },
+            )
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    payload = {
+        "contents": [{"parts": parts}],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseSchema": SubmissionRecord.model_json_schema(),
+        },
+    }
+
+    try:
+        response = httpx.post(
+            url,
+            headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+            json=payload,
+            timeout=45,
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        detail = exc.response.text[:500] if exc.response is not None else str(exc)
+        raise GeminiExtractionError(f"Gemini API request failed with HTTP {status}: {detail}") from exc
+    except httpx.HTTPError as exc:
+        raise GeminiExtractionError(f"Gemini API request failed: {exc}") from exc
+
+    try:
+        data = response.json()
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        return SubmissionRecord.model_validate_json(text)
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError, ValidationError) as exc:
+        raise GeminiExtractionError(f"Gemini response could not be parsed into a submission record: {exc}") from exc

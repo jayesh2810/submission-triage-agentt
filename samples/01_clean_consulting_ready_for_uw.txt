@@ -1,0 +1,33 @@
+Submission Type: New Business
+Broker: Northstar Retail Brokers
+Broker Contact: maya.chen@northstar.example
+Named Insured: Meridian Office Advisory LLC
+Line of Business: General Liability
+
+Applicant Summary:
+Meridian Office Advisory LLC provides management consulting and back-office process advisory services to small professional services firms. Work is performed from leased office space and client conference rooms. No construction, installation, repair, manufacturing, or field labor is performed.
+
+Class Code:
+8742 - Management consulting services
+
+Requested Limits:
+General Liability: $1,000,000 per occurrence / $2,000,000 aggregate
+
+Operations:
+- Business process consulting
+- Office workflow advisory
+- Client training workshops
+
+Locations:
+Primary office: 410 Mission Street, San Francisco, CA 94105
+
+Financials:
+Annual revenue: $820,000
+Payroll: $310,000
+
+Prior Losses:
+No known losses in the last five years.
+
+Broker Notes:
+Clean account. Please route to the standard underwriting queue.
+

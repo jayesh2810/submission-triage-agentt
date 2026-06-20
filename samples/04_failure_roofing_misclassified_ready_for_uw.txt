@@ -1,0 +1,39 @@
+DEMO_FAILURE_TRIGGER
+Submission Type: New Business
+Broker: Northstar Retail Brokers
+Broker Contact: maya.chen@northstar.example
+Named Insured: Apex Facilities Consulting LLC
+Line of Business: General Liability
+
+Applicant Summary:
+Apex Facilities Consulting LLC describes itself as a facilities consulting and property maintenance advisory firm. The applicant coordinates maintenance vendors and prepares building condition reports for small property owners.
+
+Important Source Evidence:
+The source email also states that Apex performs roof inspections, roof repair coordination, occasional roofing installation supervision, and has crews working at height. These details should create concern because roofing activity is outside the intended clean consulting exposure.
+
+Class Code Provided By Broker:
+8742 - Management consulting services
+
+Requested Limits:
+General Liability: $1,000,000 per occurrence / $2,000,000 aggregate
+
+Operations:
+- Facilities consulting
+- Property maintenance advisory
+- Roof inspection
+- Occasional roofing installation supervision
+- Vendor coordination for roof repair
+
+Locations:
+Office: 90 Walnut Street, Hartford, CT 06103
+
+Financials:
+Annual revenue: $980,000
+Payroll: $410,000
+
+Prior Losses:
+No formal loss runs attached.
+
+Broker Notes:
+Broker requests standard queue handling based on class 8742. This document is intentionally crafted to show a control gap: if the agent trusts the normalized class code and does not independently check source evidence, it can route this account as ready_for_uw even though roofing evidence suggests prohibited_class_review.
+

@@ -1,0 +1,34 @@
+Submission Type: New Business
+Broker: Summit Specialty Brokers
+Broker Contact: daniel.ortiz@summit.example
+Named Insured: Brightline Electrical Services Inc
+Line of Business: General Liability
+
+Applicant Summary:
+Brightline Electrical Services Inc performs commercial electrical contracting for tenant improvements, lighting retrofits, low-voltage wiring, and service calls. Work includes field crews at customer premises. No roofing or demolition operations are performed.
+
+Class Code:
+1731 - Electrical contractors
+
+Requested Limits:
+General Liability: $2,000,000 per occurrence / $4,000,000 aggregate
+
+Operations:
+- Commercial electrical installation
+- Lighting retrofits
+- Low-voltage wiring
+- Repair/service calls
+
+Locations:
+Office: 2200 Industrial Parkway, Columbus, OH 43215
+
+Financials:
+Annual revenue: $3,400,000
+Payroll: $1,250,000
+
+Prior Losses:
+One minor premises damage claim in 2023, paid $8,400.
+
+Broker Notes:
+Contractor exposure and requested limit above standard authority. Please route to senior underwriting review.
+
