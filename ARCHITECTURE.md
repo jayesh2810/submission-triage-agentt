@@ -115,7 +115,7 @@ The agent only routes. It does not approve, decline, quote, or bind.
 
 ### Step 6: Handoff
 
-The app creates a package for the underwriter. It includes extracted fields, confidence, enrichment, guideline results, routing, missing info, rationale, and failure analysis.
+The app creates a package for the underwriter. It includes extracted fields, confidence, enrichment, guideline results, routing, missing info, and rationale.
 
 ## Where The Demo Can Go Wrong
 
@@ -125,9 +125,9 @@ The important demo story is this:
 2. Gemini may normalize the business into a safer-looking class code.
 3. Step 4 trusts the normalized class code.
 4. The route may become `ready_for_uw`.
-5. The handoff page shows a failure analysis section so you can explain the control gap.
+5. The UI still looks clean, so the audience only spots the issue if they compare the source PDF with the app output.
 
-In simple words: the workflow can look clean, but the source evidence can still suggest the agent made a bad triage decision.
+In simple words: the workflow can look clean while the source document quietly suggests the agent made a bad triage decision.
 
 ## Runtime State
 

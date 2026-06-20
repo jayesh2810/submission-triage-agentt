@@ -2,7 +2,7 @@
 
 Independent prototype for a small commercial submission intake and triage agent.
 
-This app is intentionally separate from the older triage prototype and from other underwriting agents in the workspace. It demonstrates a six-step LangGraph workflow and a visible failure mode where a normalized class code can make a submission look clean even when source evidence suggests it should have been escalated.
+This app is intentionally separate from the older triage prototype and from other underwriting agents in the workspace. It demonstrates a six-step LangGraph workflow and a silent failure mode where a normalized class code can make a submission look clean even when source evidence suggests it should have been escalated.
 
 ## Run
 

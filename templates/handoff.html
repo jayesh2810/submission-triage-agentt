@@ -7,7 +7,6 @@
 {% set routing = handoff.get("routing") or state.get("routing") or {} %}
 {% set guidelines = handoff.get("guidelines") or state.get("guidelines") or {} %}
 {% set enrich = handoff.get("enrichment") or state.get("enrichment") or {} %}
-{% set fa = handoff.get("failure_analysis") or state.get("failure_analysis") or {} %}
 {% set extraction_failed = state.get("status") == "error" %}
 
 <div class="topline">
@@ -32,16 +31,6 @@
 </div>
 {% endif %}
 
-{% if fa.has_control_gap %}
-<div class="gapbox">
-  <h2>Failure analysis</h2>
-  <p><strong>What the agent believed:</strong> {{ fa.agent_believed }}</p>
-  <p><strong>What the source evidence suggested:</strong> {{ fa.source_evidence_suggested }}</p>
-  <p><strong>Where the control gap happened:</strong> {{ fa.control_gap }}</p>
-  <p><strong>Expected route if evidence were checked independently:</strong> {{ fa.expected_route }}</p>
-</div>
-{% endif %}
-
 <div class="panel">
   <h2>Workflow status</h2>
   <div class="steps">
@@ -62,8 +51,6 @@
       <dt>Line</dt><dd>{{ sub.line_of_business or "-" }}</dd>
       <dt>Class code</dt><dd>{{ sub.class_code or "-" }}</dd>
       <dt>Description</dt><dd>{{ sub.business_description or "-" }}</dd>
-      <dt>Source evidence flags</dt><dd>{{ sub.source_evidence_flags or [] }}</dd>
-      <dt>Extraction notes</dt><dd>{{ sub.extraction_notes or "-" }}</dd>
     </dl>
   </div>
   <div class="panel">

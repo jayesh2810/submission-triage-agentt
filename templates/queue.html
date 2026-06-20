@@ -49,20 +49,18 @@
   {% if submissions %}
   <table>
     <thead>
-      <tr><th>Submission</th><th>Insured</th><th>Status</th><th>Queue</th><th>Class</th><th>Control gap</th></tr>
+      <tr><th>Submission</th><th>Insured</th><th>Status</th><th>Queue</th><th>Class</th></tr>
     </thead>
     <tbody>
       {% for s in submissions %}
       {% set interrupt = s.get("interrupt") or {} %}
       {% set sub = s.get("submission") or interrupt.get("submission") or {} %}
-      {% set fa = s.get("failure_analysis") or {} %}
       <tr>
         <td><a href="/handoff/{{ s.submission_id }}">{{ s.submission_id }}</a><br><span class="muted">{{ s.created_at or "" }}</span></td>
         <td>{{ sub.named_insured or "Unknown" }}</td>
         <td><span class="badge {{ s.status }}">{{ s.status }}</span></td>
         <td><span class="badge {{ s.queue or 'missing_info' }}">{{ s.queue or "pending" }}</span></td>
         <td>{{ sub.class_code or "-" }}</td>
-        <td>{% if fa.has_control_gap %}<span class="badge gap">yes</span>{% else %}<span class="muted">none</span>{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
