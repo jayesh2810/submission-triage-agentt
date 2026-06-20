@@ -10,13 +10,17 @@
 
 <div class="panel">
   <h2>Workflow</h2>
-  <div class="steps">
-    <div class="step"><div class="num">STEP 1</div><div class="title">Ingest & Classify</div><div class="desc">Uploaded PDF submission.</div></div>
-    <div class="step"><div class="num">STEP 2</div><div class="title">Extract & Structure</div><div class="desc">Gemini-only structured extraction.</div></div>
-    <div class="step"><div class="num">STEP 3</div><div class="title">Enrich</div><div class="desc">Mock D&B, claims, and geo/cat context.</div></div>
-    <div class="step"><div class="num">STEP 4</div><div class="title">Appetite & Eligibility</div><div class="desc">Class, limits, prohibited classes. No geography.</div></div>
-    <div class="step"><div class="num">STEP 5</div><div class="title">Route</div><div class="desc">Queue assignment only.</div></div>
-    <div class="step"><div class="num">STEP 6</div><div class="title">Handoff</div><div class="desc">UW workbench package.</div></div>
+  <div class="steps" id="workflow-steps">
+    <div class="step" data-step="1"><div class="num">STEP 1</div><div class="title">Ingest & Classify</div><div class="desc">Uploaded PDF submission.</div></div>
+    <div class="step" data-step="2"><div class="num">STEP 2</div><div class="title">Extract & Structure</div><div class="desc">Gemini-only structured extraction.</div></div>
+    <div class="step" data-step="3"><div class="num">STEP 3</div><div class="title">Enrich</div><div class="desc">Mock D&B, claims, and geo/cat context.</div></div>
+    <div class="step" data-step="4"><div class="num">STEP 4</div><div class="title">Appetite & Eligibility</div><div class="desc">Class, limits, prohibited classes. No geography.</div></div>
+    <div class="step" data-step="5"><div class="num">STEP 5</div><div class="title">Route</div><div class="desc">Queue assignment only.</div></div>
+    <div class="step" data-step="6"><div class="num">STEP 6</div><div class="title">Handoff</div><div class="desc">UW workbench package.</div></div>
+  </div>
+  <div class="workflow-live" id="workflow-live" hidden>
+    <div class="workflow-bar"><span id="workflow-bar-fill"></span></div>
+    <div class="workflow-status" id="workflow-status">Starting triage graph...</div>
   </div>
 </div>
 
@@ -27,14 +31,14 @@
 </div>
 {% endif %}
 
-<form class="panel" method="post" action="/submissions" enctype="multipart/form-data">
+<form class="panel" method="post" action="/submissions" enctype="multipart/form-data" id="submission-form">
   <h2>New submission</h2>
   <div>
     <label>PDF submission</label>
     <input type="file" name="files" multiple required accept=".pdf">
   </div>
   <div class="actions">
-    <button type="submit">Run triage graph</button>
+    <button type="submit" id="submit-button">Run triage graph</button>
   </div>
 </form>
 
@@ -69,4 +73,95 @@
   <div class="hint">No submissions yet. Upload a PDF file.</div>
   {% endif %}
 </div>
+<script>
+  (() => {
+    const form = document.getElementById("submission-form");
+    const button = document.getElementById("submit-button");
+    const live = document.getElementById("workflow-live");
+    const status = document.getElementById("workflow-status");
+    const bar = document.getElementById("workflow-bar-fill");
+    const steps = Array.from(document.querySelectorAll("#workflow-steps .step"));
+    const labels = [
+      "Step 1: ingesting uploaded PDF...",
+      "Step 2: extracting fields with Gemini...",
+      "Step 3: adding mock enrichment...",
+      "Step 4: checking appetite and eligibility...",
+      "Step 5: routing submission...",
+      "Step 6: preparing handoff package..."
+    ];
+
+    if (!form || !button || !live || !status || !bar || !steps.length) return;
+
+    const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+    const stepDelay = () => 5000 + Math.floor(Math.random() * 4000);
+
+    const paint = (index) => {
+      steps.forEach((step, stepIndex) => {
+        step.classList.toggle("is-active", stepIndex === index);
+        step.classList.toggle("is-done", stepIndex < index);
+      });
+      status.textContent = labels[index];
+      bar.style.width = `${((index + 1) / steps.length) * 100}%`;
+    };
+
+    const finish = () => {
+      steps.forEach((step) => {
+        step.classList.remove("is-active");
+        step.classList.add("is-done");
+      });
+      status.textContent = "Opening handoff package...";
+      bar.style.width = "100%";
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      live.hidden = false;
+      button.disabled = true;
+      button.textContent = "Running triage graph...";
+      document.body.classList.add("workflow-running");
+
+      try {
+        paint(0);
+        await sleep(stepDelay());
+
+        paint(1);
+        const response = await window.fetch(form.action, {
+          method: form.method,
+          body: new FormData(form),
+          redirect: "follow"
+        });
+
+        if (!response.ok) {
+          document.open();
+          document.write(await response.text());
+          document.close();
+          return;
+        }
+
+        const finalPage = await response.clone().text();
+        if (finalPage.includes("Extraction failed")) {
+          status.textContent = "Extraction failed. Opening details...";
+          await sleep(700);
+          window.location.href = response.url;
+          return;
+        }
+
+        for (const index of [2, 3, 4, 5]) {
+          paint(index);
+          await sleep(stepDelay());
+        }
+
+        finish();
+        await sleep(700);
+        window.location.href = response.url;
+      } catch (error) {
+        live.classList.add("has-error");
+        status.textContent = `Triage request failed: ${error.message}`;
+        button.disabled = false;
+        button.textContent = "Run triage graph";
+        steps.forEach((step) => step.classList.remove("is-active"));
+      }
+    });
+  })();
+</script>
 {% endblock %}

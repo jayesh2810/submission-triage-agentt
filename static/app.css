@@ -117,6 +117,10 @@ button, .button {
   cursor: pointer;
   text-decoration: none;
 }
+button:disabled {
+  cursor: wait;
+  opacity: .78;
+}
 .button.secondary, button.secondary {
   background: #fff;
   color: var(--blue);
@@ -145,10 +149,62 @@ tr:last-child td { border-bottom: 0; }
   border-radius: 7px;
   padding: 10px;
   min-height: 88px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, background .2s ease;
 }
+.step.is-active {
+  border-color: #276bb3;
+  background: #f4f9ff;
+  box-shadow: 0 0 0 2px rgba(39, 107, 179, .16), 0 0 24px rgba(39, 107, 179, .32);
+  transform: translateY(-2px);
+  animation: stepGlow 1.2s ease-in-out infinite;
+}
+.step.is-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,.75) 45%, transparent 70%);
+  transform: translateX(-100%);
+  animation: stepSweep 1.2s ease-in-out infinite;
+}
+.step.is-done {
+  border-color: #a8d7c0;
+  background: #f3fbf7;
+}
+.step.is-done .num { color: var(--green); }
 .step .num { color: var(--muted); font-size: 10px; font-weight: 800; }
 .step .title { font-size: 12px; font-weight: 800; margin: 4px 0; }
 .step .desc { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.workflow-live {
+  margin-top: 14px;
+}
+.workflow-bar {
+  height: 6px;
+  background: #e6e0d7;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.workflow-bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--green));
+  border-radius: inherit;
+  transition: width .35s ease;
+}
+.workflow-status {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.workflow-live.has-error .workflow-bar span {
+  background: var(--red);
+}
+.workflow-live.has-error .workflow-status {
+  color: var(--red);
+}
 .kv {
   display: grid;
   grid-template-columns: 190px 1fr;
@@ -183,6 +239,14 @@ pre {
   overflow: auto;
 }
 .muted { color: var(--muted); }
+@keyframes stepGlow {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(39, 107, 179, .14), 0 0 18px rgba(39, 107, 179, .24); }
+  50% { box-shadow: 0 0 0 3px rgba(39, 107, 179, .22), 0 0 30px rgba(39, 107, 179, .42); }
+}
+@keyframes stepSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .side { position: static; }
