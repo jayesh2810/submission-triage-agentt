@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Handoff - Submission Triage Agent{% endblock %}
+{% block title %}Handoff - Submission Agent{% endblock %}
 {% block content %}
 {% set handoff = state.get("handoff") or {} %}
 {% set interrupt = state.get("interrupt") or {} %}
@@ -11,8 +11,8 @@
 
 <div class="topline">
   <div>
-    <h1>Handoff package</h1>
-    <div class="hint">{{ state.submission_id }}{% if state.status == "needs_review" %} needs manual review before handoff is complete{% endif %}</div>
+    <h1>Underwriting handoff</h1>
+    <div class="hint">{{ state.submission_id }}{% if state.status == "needs_review" %} is waiting for an underwriter review{% endif %}</div>
   </div>
   <div class="actions">
     <a class="button secondary" href="/">Back to queue</a>
@@ -32,11 +32,11 @@
 {% endif %}
 
 <div class="panel">
-  <h2>Workflow status</h2>
+  <h2>File progress</h2>
   <div class="steps">
     <div class="step"><div class="num">STEP 1</div><div class="title">Ingest & Classify</div><div class="desc">Complete</div></div>
     <div class="step"><div class="num">STEP 2</div><div class="title">Extract & Structure</div><div class="desc">{% if extraction_failed %}Failed{% else %}Class {{ sub.class_code or "unknown" }}{% endif %}</div></div>
-    <div class="step"><div class="num">STEP 3</div><div class="title">Enrich</div><div class="desc">{% if extraction_failed %}Skipped{% else %}Mock enrichment attached{% endif %}</div></div>
+    <div class="step"><div class="num">STEP 3</div><div class="title">Supplement</div><div class="desc">{% if extraction_failed %}Skipped{% else %}Additional checks attached{% endif %}</div></div>
     <div class="step"><div class="num">STEP 4</div><div class="title">Appetite & Eligibility</div><div class="desc">{% if extraction_failed %}Skipped{% else %}No geography checks{% endif %}</div></div>
     <div class="step"><div class="num">STEP 5</div><div class="title">Route</div><div class="desc">{% if extraction_failed %}Skipped{% else %}{{ routing.queue or "pending" }}{% endif %}</div></div>
     <div class="step"><div class="num">STEP 6</div><div class="title">Handoff</div><div class="desc">{{ state.status }}</div></div>
@@ -45,7 +45,7 @@
 
 <div class="grid two">
   <div class="panel">
-    <h2>Agent believed</h2>
+    <h2>Submission summary</h2>
     <dl class="kv">
       <dt>Named insured</dt><dd>{{ sub.named_insured or "-" }}</dd>
       <dt>Line</dt><dd>{{ sub.line_of_business or "-" }}</dd>
@@ -54,7 +54,7 @@
     </dl>
   </div>
   <div class="panel">
-    <h2>Route</h2>
+    <h2>Queue recommendation</h2>
     {% if routing.queue %}
     <p><span class="badge {{ routing.queue }}">{{ routing.queue }}</span></p>
     <p>{{ routing.rationale }}</p>
@@ -65,7 +65,7 @@
     <p><span class="badge needs_review">needs_review</span></p>
     <p>Graph is waiting for manual review.</p>
     {% endif %}
-    <h3>Guideline reasons</h3>
+    <h3>Why this queue</h3>
     <ul>
       {% for reason in guidelines.reasons or [] %}<li>{{ reason }}</li>{% endfor %}
     </ul>
@@ -74,11 +74,25 @@
 
 <div class="grid two">
   <div class="panel">
-    <h2>Mock enrichment</h2>
-    <pre>{{ enrich }}</pre>
+    <h2>Supplemental checks</h2>
+    {% set profile = enrich.get("business_profile") or {} %}
+    {% set claims = enrich.get("claims_signal") or {} %}
+    <dl class="kv check-list">
+      <dt>Business match</dt>
+      <dd>{{ profile.get("matched_name") or sub.named_insured or "-" }}</dd>
+      <dt>Entity type</dt><dd>{{ profile.get("entity_type") or "-" }}</dd>
+      <dt>Class used</dt><dd>{{ profile.get("normalized_class_code") or sub.class_code or "-" }}</dd>
+      <dt>Claims signal</dt>
+      <dd>
+        <span class="badge {{ claims.get("severity") or "missing_info" }}">{{ claims.get("severity") or "unknown" }}</span>
+        {{ claims.get("summary") or "No claims signal available." }}
+      </dd>
+      <dt>Loss count</dt><dd>{{ claims.get("loss_count_3yr", "-") }} in the last 3 years</dd>
+    </dl>
+    <p class="muted panel-note">These checks support triage context only. They are not a quote, bind, approval, or decline decision.</p>
   </div>
   <div class="panel">
-    <h2>Audit trail</h2>
+    <h2>Processing log</h2>
     <pre>{% for event in state.audit_events or [] %}{{ event }}
 {% endfor %}</pre>
   </div>

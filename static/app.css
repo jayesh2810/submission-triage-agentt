@@ -40,6 +40,32 @@ a { color: inherit; }
   line-height: 1.4;
   margin-bottom: 24px;
 }
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c8cfdd;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 10px 0 18px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 8px;
+}
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #7c8799;
+  box-shadow: 0 0 0 4px rgba(124,135,153,.12);
+}
+.agent-status.online .status-dot {
+  background: #41d98c;
+  box-shadow: 0 0 0 4px rgba(65,217,140,.15), 0 0 16px rgba(65,217,140,.45);
+}
+.agent-status.offline .status-dot {
+  background: #e0a13a;
+  box-shadow: 0 0 0 4px rgba(224,161,58,.14);
+}
 .nav a {
   display: flex;
   justify-content: space-between;
@@ -60,10 +86,16 @@ a { color: inherit; }
 }
 .pill { background: rgba(255,255,255,.1); color: #f3efe6; }
 .badge.ready_for_uw, .badge.complete { background: #e3f3eb; color: var(--green); }
+.badge.low { background: #e3f3eb; color: var(--green); }
 .badge.missing_info, .badge.needs_review { background: #fff1d7; color: var(--amber); }
+.badge.medium { background: #fff1d7; color: var(--amber); }
 .badge.senior_uw_review { background: #eeeafd; color: var(--purple); }
-.badge.prohibited_class_review, .badge.gap, .badge.error { background: #f9e3e3; color: var(--red); }
-.content { padding: 28px; max-width: 1180px; }
+.badge.prohibited_class_review, .badge.gap, .badge.error, .badge.high { background: #f9e3e3; color: var(--red); }
+.content {
+  padding: 28px;
+  width: 100%;
+  max-width: none;
+}
 .topline {
   display: flex;
   align-items: center;
@@ -140,7 +172,7 @@ td { border-bottom: 1px solid #ece8df; padding: 10px 9px; vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
 .steps {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
   gap: 8px;
 }
 .step {
@@ -213,6 +245,15 @@ tr:last-child td { border-bottom: 0; }
 }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; font-weight: 600; }
+.check-list dd {
+  font-weight: 500;
+  line-height: 1.45;
+}
+.panel-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
 .notice {
   border: 1px solid #e6bd72;
   background: #fff8ea;

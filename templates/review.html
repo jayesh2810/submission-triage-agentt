@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Review - Submission Triage Agent{% endblock %}
+{% block title %}Review - Submission Agent{% endblock %}
 {% block content %}
 {% set payload = state.interrupt or {} %}
 {% set sub = payload.submission or state.submission or {} %}
 <div class="topline">
   <div>
-    <h1>Manual review</h1>
+    <h1>Underwriter review</h1>
     <div class="hint">{{ state.submission_id }}</div>
   </div>
   <a class="button secondary" href="/">Back to queue</a>
 </div>
 
 <div class="notice">
-  <strong>Graph paused for review.</strong>
+  <strong>This file needs an underwriter check before routing continues.</strong>
   {% for reason in payload.reasons or [] %}
     <div>{{ reason }}</div>
   {% endfor %}
@@ -44,13 +44,12 @@
   </div>
   <input type="hidden" name="action" value="resume">
   <div class="actions">
-    <button type="submit">Resume graph</button>
+    <button type="submit">Continue routing</button>
   </div>
 </form>
 
 <div class="panel">
-  <h2>Raw paused state</h2>
+  <h2>Processing details</h2>
   <pre>{{ state }}</pre>
 </div>
 {% endblock %}
-
