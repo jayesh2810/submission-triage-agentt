@@ -31,16 +31,24 @@
 </div>
 {% endif %}
 
-<form class="panel" method="post" action="/submissions" enctype="multipart/form-data" id="submission-form">
-  <h2>New submission</h2>
-  <div>
-    <label>PDF submission</label>
-    <input type="file" name="files" multiple required accept=".pdf">
+<div class="grid two">
+  <form class="panel" method="post" action="/submissions" enctype="multipart/form-data" id="submission-form">
+    <h2>New submission</h2>
+    <div>
+      <label>PDF submission</label>
+      <input type="file" name="files" multiple required accept=".pdf" id="pdf-input">
+    </div>
+    <div class="actions">
+      <button type="submit" id="submit-button">Run triage graph</button>
+    </div>
+  </form>
+  <div class="panel">
+    <h2>Uploaded PDF</h2>
+    <iframe id="pdf-preview" title="Uploaded PDF preview" hidden
+            style="width:100%;height:520px;border:1px solid #e2e2e2;border-radius:8px;"></iframe>
+    <div class="hint" id="pdf-empty">Choose a PDF to preview it here.</div>
   </div>
-  <div class="actions">
-    <button type="submit" id="submit-button">Run triage graph</button>
-  </div>
-</form>
+</div>
 
 <div class="grid three">
   <div class="panel"><h3>Ready for UW</h3><div class="badge ready_for_uw">{{ counts.ready_for_uw }}</div></div>
@@ -74,6 +82,29 @@
   {% endif %}
 </div>
 <script>
+  (() => {
+    const input = document.getElementById("pdf-input");
+    const preview = document.getElementById("pdf-preview");
+    const empty = document.getElementById("pdf-empty");
+    if (input && preview && empty) {
+      let currentUrl = null;
+      input.addEventListener("change", () => {
+        if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+        const file = input.files && input.files[0];
+        if (file && file.type === "application/pdf") {
+          currentUrl = URL.createObjectURL(file);
+          preview.src = currentUrl;
+          preview.hidden = false;
+          empty.hidden = true;
+        } else {
+          preview.removeAttribute("src");
+          preview.hidden = true;
+          empty.hidden = false;
+        }
+      });
+    }
+  })();
+
   (() => {
     const form = document.getElementById("submission-form");
     const button = document.getElementById("submit-button");
