@@ -124,7 +124,7 @@
     if (!form || !button || !live || !status || !bar || !steps.length) return;
 
     const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
-    const stepDelay = () => 5000 + Math.floor(Math.random() * 4000);
+    const stepDelay = () => 3000 + Math.floor(Math.random() * 3000);
 
     const paint = (index) => {
       steps.forEach((step, stepIndex) => {
